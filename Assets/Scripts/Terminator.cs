@@ -4,7 +4,8 @@ This script defines a Terminator class in Unity. Here's a summary of its functio
     o	Finds the player GameObject by its tag and gets its Transform component.
     o	Retrieves the EntityMovement script from the same GameObject.
 •	Update():
-    o	Moves the Terminator towards the player only in the x direction.
+    o	Moves the Terminator towards the player only in the x direction and calculates the distance between the Terminator and the player along the x and y axes.
+    o	It checks if the calculated distances are greater than certain thresholds (0.1f for the x-axis and 5f for the y-axis). If either of these conditions is met, it proceeds to update the direction of the Terminator's movement.
     o	Flips the sprite based on the direction of movement.
 •	OnCollisionEnter2D(Collision2D collision):
     o	If the Terminator collides with the player, triggers the player's Hit() function.
@@ -45,18 +46,26 @@ public class Terminator : MonoBehaviour
 
     private void Update()
     {
-        // Move the Terminator towards the player only in the x direction
-        float direction = Mathf.Sign(player.position.x - transform.position.x);
-        transform.position += new Vector3(direction * entityMovement.speed * Time.deltaTime, 0, 0);
+        // Calculate the distance between the Terminator and the player
+        float distanceX = Mathf.Abs(player.position.x - transform.position.x);
+        float distanceY = Mathf.Abs(player.position.y - transform.position.y);
 
-        // Flip the sprite based on the direction
-        if (direction > 0)
+        // Update direction only if necessary
+        if (distanceX > 0.1f || distanceY > 5f)
         {
-            transform.localScale = new Vector3(-1, 1, 1); // Facing right
-        }
-        else if (direction < 0)
-        {
-            transform.localScale = new Vector3(1, 1, 1); // Facing left
+            // Move the Terminator towards the player only in the x direction
+            float direction = Mathf.Sign(player.position.x - transform.position.x);
+            transform.position += new Vector3(direction * entityMovement.speed * Time.deltaTime, 0, 0);
+
+            // Flip the sprite based on the direction
+            if (direction > 0)
+            {
+                transform.localScale = new Vector3(-1, 1, 1); // Facing right
+            }
+            else if (direction < 0)
+            {
+                transform.localScale = new Vector3(1, 1, 1); // Facing left
+            }
         }
     }
 

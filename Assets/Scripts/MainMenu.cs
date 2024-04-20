@@ -13,6 +13,9 @@ public class MainMenu : MonoBehaviour
     // Function to start the game
     public void Playgame()
     {
+        // Reset lives and coins in GameManager before starting a new game
+        GameManager.Instance.NewGame();
+
         // Load the next scene in the build order
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }

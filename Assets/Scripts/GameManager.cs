@@ -139,8 +139,6 @@ public class GameManager : MonoBehaviour
     {
         // Set the target frame rate
         Application.targetFrameRate = 60;
-        // Start a new game
-        NewGame();
     }
 
     // Function to start a new game

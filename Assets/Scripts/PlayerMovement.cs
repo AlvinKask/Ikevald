@@ -10,6 +10,8 @@ Here are the key parts of the methods:
 •	private void Update() { ... }: The Update method is a Unity callback that is called once per frame. Here, it’s used to handle the player’s horizontal movement, check if the player is grounded, handle the player’s grounded movement, and apply gravity.
 •	private void FixedUpdate() { ... }: The FixedUpdate method is a Unity callback that is called at a fixed interval. Here, it’s used to update the player’s position based on the velocity and clamp the player’s x position within the screen bounds.
 •	private void HorizontalMovement() { ... }, private void GroundedMovement() { ... }, private void ApplyGravity() { ... }: These methods are used to handle the player’s horizontal movement, grounded movement, and gravity.
+•	private void TouchMovement(): This method handles touch input for controlling movement. It loops through each touch input, checks if the touch is on the left half of the screen, and if so, determines whether the touch has just begun, is moving, or has ended. Based on this, it calculates the direction and distance of touch movement relative to the screen width and sets the horizontal velocity of the player accordingly.
+•	private void TouchJump(): This method handles touch input for initiating a jump. It first checks if there are any touches detected. If there are, it loops through each touch input, checks if the touch is on the right half of the screen, and if so, determines if the touch has just begun. If the player is grounded (i.e., not already in mid-air), it applies a jump force to the player's vertical velocity, sets the jumping state to true, and plays a jumping sound effect.
 •	private void OnCollisionEnter2D(Collision2D collision) { ... }: The OnCollisionEnter2D method is a Unity callback that is called when the player’s Collider2D starts touching another Collider2D. Here, it’s used to handle the player’s interaction with enemies and power-ups.
 */
 
@@ -46,6 +48,9 @@ public class PlayerMovement : MonoBehaviour
     public AudioClip runningSound;
     public AudioClip jumpingSound;
     private AudioSource audioSource;
+
+    // Touch Control parameter
+    private Vector2 startTouchPosition;
 
     private void Awake()
     {
@@ -89,6 +94,9 @@ public class PlayerMovement : MonoBehaviour
             GroundedMovement();
         }
         ApplyGravity();
+
+        TouchMovement();
+        TouchJump();
     }
 
     private void FixedUpdate()
@@ -120,6 +128,69 @@ public class PlayerMovement : MonoBehaviour
             transform.eulerAngles = Vector3.zero;
         } else if (velocity.x < 0f) {
             transform.eulerAngles = new Vector3(0f, 180f, 0f);
+        }
+    }
+
+    private void TouchMovement()
+    {
+        // Loop through each touch input
+        foreach (Touch touch in Input.touches)
+        {
+            // Check if the touch is on the left half of the screen
+            if (touch.position.x < Screen.width / 2)
+            {
+                // If the touch has just begun
+                if (touch.phase == TouchPhase.Began)
+                {
+                    // Store the initial touch position
+                    startTouchPosition = touch.position;
+                }
+                // If the touch is moving or ended
+                else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Ended)
+                {
+                    // Calculate the change in touch position
+                    Vector2 touchDeltaPosition = touch.position - startTouchPosition;
+
+                    // Determine the direction of the touch movement
+                    float direction = Mathf.Sign(touchDeltaPosition.x);
+                    // Calculate the distance of touch movement relative to screen width
+                    float distance = touchDeltaPosition.magnitude / Screen.width;
+
+                    // Set the horizontal velocity based on touch movement
+                    velocity.x = direction * distance * moveSpeed * 4;
+                }
+            }
+        }
+    }
+
+    private void TouchJump()
+    {
+        // Check if there are any touches
+        if (Input.touchCount > 0)
+        {
+            // Loop through each touch input
+            foreach (Touch touch in Input.touches)
+            {
+                // Check if the touch is on the right half of the screen
+                if (touch.position.x > Screen.width / 2)
+                {
+                    // If the touch has just begun
+                    if (touch.phase == TouchPhase.Began)
+                    {
+                        // Check if the player is grounded
+                        if (grounded)
+                        {
+                            // Apply jump force
+                            velocity.y = jumpForce * 1.55f;
+                            // Set jumping state to true
+                            jumping = true;
+
+                            // Play jumping sound
+                            audioSource.PlayOneShot(jumpingSound, 0.5f);
+                        }
+                    }
+                }
+            }
         }
     }
 
